@@ -29,14 +29,13 @@
        :license {"MIT" "https://en.wikipedia.org/MIT_License"}}
   figwheel '{:build-ids ["dev"]
              :all-builds [{:id "dev" :source-paths ["src"]
-                           :compiler {:main qarma.client :output-to "app.js"}
+                           :compiler {:main irresponsible.domiscuity-test :output-to "app.js"}
                            :figwheel {:build-id "dev"
-                                      :on-jsload qarma.client/main
+                                      :on-jsload irresponsible.domiscuity-test/main
                                       :heads-up-display true
                                       :autoload true
                                       :debug false}}]
              :figwheel-options {:open-file-command "emacsclient" :repl true}}
-  repl  {:init-ns 'qarma.core}
   test-cljs {:js-env :phantom}
   target  {:dir #{"target"}})
 

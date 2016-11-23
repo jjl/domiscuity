@@ -2,9 +2,10 @@ The irresponsible clojure guild present...
 
 # domiscuity
 
-Parse html5 and manipulate and convert its DOM.
+Parse html5 and play with the DOM with a clean API
 
-Supports clojure and clojurescript
+Supports clojure, clojurescript support coming as soon as we
+figure out how to unit test it properly (bad phantomjs!)
 
 ## Usage
 

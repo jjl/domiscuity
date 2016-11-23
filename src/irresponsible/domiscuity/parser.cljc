@@ -1,6 +1,5 @@
 (ns irresponsible.domiscuity.parser
-  (:require [irresponsible.domiscuity.convertor :as c]
-            [irresponsible.domiscuity.nav :as nav])
+  (:require [irresponsible.domiscuity.convertor :as c])
   #?(:clj (:import [org.jsoup Jsoup])))
 
 (defn doc
@@ -23,7 +22,7 @@
    returns: seq of Element"
   [^String html]
   #?(:clj  (.getChildNodes (.body (Jsoup/parseBodyFragment html)))
-     :cljs (-> (parse-document html)
+     :cljs (-> (doc html)
                (.getElementsByTagName "body")
                .childNodes)))
 
@@ -32,5 +31,5 @@
    args: [html-string]
    returns: vec of map"
   [f]
-  (c/native-into-clojure [] (frag f)))
+  (c/native-into [] (frag f)))
 

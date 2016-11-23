@@ -1,6 +1,7 @@
 (ns irresponsible.domiscuity.convertor
+  (:require [irresponsible.domiscuity.dom :as dom])
   #?(:clj (:import [org.jsoup.nodes Attribute Comment DataNode
-                                    Document  Element TextNode])))
+                                   Document  Element TextNode])))
 
 (def ^:dynamic *remove-empty-text*
   "Whether to remove text nodes that are 100% whitespace"
@@ -15,7 +16,6 @@
  (def ^:dynamic *trim-text*
    "Whether to remove excess whitespace from around text nodes"
    true))
-#?
 
 (defmulti native->clojure
   "Turns a native dom object into a clojure representation
@@ -24,16 +24,31 @@
    contract: return a clojure data"
   type)
 
-(defn native-into-clojure
+(defn native-into
   "Given something we can call seq on, returns a vector
    of calling native->clojure on the contents
    args: [items]
    returns: vector"
   [base is]
-  (into base (keep native->clojure) (nav/clojure-seq is)))
+  (into base (keep native->clojure) (dom/clojure-seq is)))
+
+(defmulti clojure->native
+  "Turns a clojure map into a native dom element
+   args: [m]
+   dispatch: :kind
+   contract: return a native dom element or nil if there is none to display
+             it is okay to throw if data is invalid"
+  :kind)
 
 (defmethod native->clojure :default [_] nil)
 
+(defmethod clojure->native :default [fail]
+  (throw
+   (if (map? fail)
+    (ex-info "Invalid kind" {:got (:kind fail)})
+    (ex-info "Invalid clojure data" {:got fail}))))
+
+#?
 (:clj
  (defmethod native->clojure Attribute
    [^Attribute a]
@@ -53,6 +68,10 @@
    [c]
    {:kind :comment :comment (.-data c)}))
 
+(defmethod clojure->native :comment
+  [{:keys [comment]}]
+  (dom/make-comment comment))
+
 #?
 (:clj
  (defmethod native->clojure DataNode
@@ -62,18 +81,18 @@
 (defmethod native->clojure
   #?@(:clj  [Document [^Document d]]
       :cljs [js/Document [d]])
-  (let [children (native-into-clojure [] (nav/children d))]
+  (let [children (native-into [] (dom/children d))]
      {:kind :document :nodes children}))
-
 
 (defmethod native->clojure
   #?@(:clj  [Element [^Element e]]
       :cljs [js/Element [e]])
-   (let [tag-name (.tagName e)
-         attrs    (native-into-clojure {} (nav/attributes e))
-         children (native-into-clojure [] (nav/children e))]
+   (let [tag-name (dom/tag-name e)
+         attrs    (native-into {} (dom/attributes e))
+         children (native-into [] (dom/children e))]
      {:kind :element :tag-name tag-name
       :attrs attrs   :children children}))
+
 #?
 (:clj
   (defmethod native->clojure TextNode
@@ -81,9 +100,13 @@
     (when-not (and *remove-empty-text* (.isBlank t))
       {:kind :text :text (if *trim-text* (.text t) (.getWholeText t))}))
  :cljs
- (defmethod native->clojure js/Text
+ (defmethod native->clojure js/Text ;; CDataSection (deprecated) isa Text
    [t]
    (when-not (and *remove-empty-text*
                   (.-isElementContentWhitespace t))
      {:kind :text :text (.-wholeText t)})))
+
+(defmethod clojure->native :text
+  [{:keys [text]}]
+  (dom/make-text text))
 
