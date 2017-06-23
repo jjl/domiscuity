@@ -1,5 +1,6 @@
 (ns irresponsible.domiscuity.parser
-  (:require [irresponsible.domiscuity.convertor :as c])
+  (:require [irresponsible.domiscuity.convertor :as c]
+            [irresponsible.domiscuity.util :as util])
   #?(:clj (:import [org.jsoup Jsoup])))
 
 (defn doc
@@ -21,10 +22,11 @@
    args: [html-string]
    returns: seq of Element"
   [^String html]
-  #?(:clj  (.getChildNodes (.body (Jsoup/parseBodyFragment html)))
+  #?(:clj  (-> html Jsoup/parseBodyFragment .body .childNodes util/clojure-vec)
      :cljs (-> (doc html)
                (.getElementsByTagName "body")
-               .childNodes)))
+               .childNodes
+               util/clojure-vec)))
 
 (defn frag-clj
   "Given a body html fragment string, returns seq of top-level elems

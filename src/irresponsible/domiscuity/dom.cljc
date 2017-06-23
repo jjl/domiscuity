@@ -1,6 +1,6 @@
 (ns irresponsible.domiscuity.dom
   (:require [clojure.string :as str]
-            [irresponsible.domiscuity.util :as u])
+            [irresponsible.domiscuity.util :as u :refer [clojure-vec]])
   #?(:clj (:import [org.jsoup.parser Tag]
                    [org.jsoup.select Elements]
                    [org.jsoup.nodes Attribute Comment DataNode
@@ -12,26 +12,12 @@
    "The base url that is assigned to the dom nodes. Because jsoup demands something"
    "http://example.org/"))
 
-(defn clojure-seq [is]
-  #?(:clj  (seq is)
-     :cljs (array-seq is 0)))
-
-(defn clojure-vec
-  "Turns DOM collections into vectors, optionally transducing
-   Note that this necessarily provides a static view
-   args: [items] [items xform]
-   returns: vector"
-  ([is]
-   (into [] (clojure-seq is)))
-  ([is xform]
-   (into [] xform (clojure-seq is))))
-
 (defn elem?
   "true if e is an element
    args: [e]
    returns: bool"
   [e]
-  (instance? #?(:clj Element   :cljs js/Element) e))
+  (instance? #?(:clj Element :cljs js/Element) e))
 
 (defn attr?
   "true if a is an attribute
@@ -52,24 +38,24 @@
    args: [c]
    returns: bool"
   [c]
-  (instance? #?(:clj Comment   :cljs js/Comment) c))
+  (instance? #?(:clj Comment :cljs js/Comment) c))
 
 #?
-(:clj 
+(:clj
  (defn jsoup-elements ^Elements [& elems]
    (let [es (Elements. ^int (count elems))]
      (doseq [^Element e elems]
        (.add es e))
      es)))
 
-(defn attr-name
+(defn -attr-name
   "Returns the name of an attribute as a keyword
    args: [attr]
    returns: keyword"
   [^Attribute a]
   (-> a #?(:clj .getKey :cljs .-name) u/name-kw))
 
-(defn attr-val
+(defn -attr-val
   "Returns the value of an attribute
    args: [attr]
    returns: string or true (for a boolean attribute)"
@@ -77,23 +63,16 @@
   (let [r (#?(:clj .getValue :cljs .-value) a)]
     (or (= "" r) r)))
 
-(defn tag-name
-  "Gets the tag name for an element as a keyword
-   args: [elem]
-   returns: keyword"
-  [^Element e]
-  (-> e #?(:clj .tagName :cljs .-nodeName) u/name-kw))
-
-(defn attributes
-  "Returns a vector of a node's attributes, optionally transformed
+(defn -attributes
+  "Returns a vector of a node's -attributes, optionally transformed
    args: [node] [node xform]
    returns: vector"
   ([^Node n]
-   (-> n #?(:clj  .attributes :cljs .-attributes) clojure-vec))
+   (-attributes n identity))
   ([^Node n xform]
    (-> n #?(:clj  .attributes :cljs .-attributes) (clojure-vec xform))))
 
-(defn make-attr-name
+(defn -make-attr-name
   "Flexibly converts an attribute name so it is usable on an element.
    If it is a string, it is used as-is, for a keyword, we turn
    it into a string, detecting a namespace and using : to join if required
@@ -106,31 +85,47 @@
       (name n))
     (str n)))
 
+(defn tag-name
+  "Gets the tag name for an element as a keyword
+   args: [elem]
+   returns: keyword"
+  [^Element e]
+  (-> e #?(:clj .tagName :cljs .-nodeName) u/name-kw))
+
+;; TODO: pass transducer
 (defn attrs
   "Returns a map of the element's attributes, key to value
    args: [node]
    return: "
   [elem]
-  (into {} (map (fn [a] [(attr-name a) (attr-val a)]))
-        (attributes elem)))
+  (into {} (map (fn [a] [(-attr-name a) (-attr-val a)]))
+        (-attributes elem)))
+
+(defn has-attr?
+  "Returns true if the element contains the given attribute."
+  [^Element elem attr]
+  (#?(:clj .hasAttr) elem (-make-attr-name attr)))
 
 (defn attr
   "Returns the value of an element's attribute by name
-   args: [elem attr-name]
+   args: [elem -attr-name]
    returns: string or true"
   [^Element elem attr]
-  (let [^String name (make-attr-name attr)
-        r (#?(:clj .attr :cljs .getAttribute) elem name)]
-    (or (= "" r) r)))
+  (if (has-attr? elem attr)
+    (let [^String name (-make-attr-name attr)
+          r (#?(:clj .attr :cljs .getAttribute) elem name)]
+      (or (= "" r) r))
+    nil))
 
 (defn set-attr!
   "Sets an attribute on an element
    args [elem k v]
    returns: elem, mutated in place"
   ^Element [^Element e k v]
-  #?(:clj (if (boolean? v)
-            (.attr e (make-attr-name k) ^boolean v)
-            (.attr e (make-attr-name k) ^String (str v)))
+  #?(:clj (cond
+            (boolean? v) (.attr e (-make-attr-name k) ^boolean v)
+            (nil? v) e
+            :else (.attr e (-make-attr-name k) ^String (str v)))
      :cljs (.setAttribute e k v)))
 
 (defn update-attr!
@@ -138,7 +133,8 @@
    args: [element key fun]
    returns: elem, mutated in place"
   [e k f]
-  (->> (attr e k) f
+  (->> (attr e k)
+       f
        (set-attr! e k)))
 
 (defn set-attrs!
@@ -171,7 +167,7 @@
    args: [node] [node xform]
    returns: seq of Node"
   ([^Node n]
-   (-> n #?(:clj .childNodes :cljs .-childNodes) clojure-vec))
+   (children n identity))
   ([^Node n xform]
    (-> n #?(:clj .childNodes :cljs .-childNodes) (clojure-vec xform))))
 
@@ -180,7 +176,7 @@
    args: [node] [node xform]
    returns: "
   ([^Node n]
-   (-> n #?(:clj .children   :cljs .-children) clojure-vec))
+   (child-elems n identity))
   ([^Node n xform]
    (-> n #?(:clj .children   :cljs .-children) (clojure-vec xform))))
 
@@ -200,7 +196,13 @@
      elem:   the element to insert
    returns: the newly inserted element"
   [^Node marker ^Node elem]
-  #?(:clj  (do (.before marker elem) elem)
+  #?(:clj  (try
+             (.before marker elem) elem
+             (catch IllegalArgumentException e
+               (ex-info
+                "Cannot insert before element"
+                {:marker marker :elem elem}
+                e)))
      :cljs (.insertBefore (.parent marker) elem marker)))
 
 (defn insert-after!
@@ -210,9 +212,15 @@
      elem:   the element to insert
    returns: the newly inserted element"
   [^Node marker ^Node elem]
-  #?(:clj  (do (.after marker elem) elem)
+  #?(:clj  (try
+             (.after marker elem) elem
+             (catch IllegalArgumentException e
+               (throw (ex-info
+                       "Cannot insert after element"
+                       {:marker marker :elem elem}
+                       e))))
      :cljs (.insertAfter (.parent marker) elem (when marker (next-sibling marker)))))
-  
+
 (defn make-element
   "Manufactures an element
    args: [tag-name] [tag-name attrs] [tag-name attrs children]
@@ -249,8 +257,11 @@
    args: [& elems]
    returns: vector of elems removed"
   [& elems]
-  #?(:clj (do (doto (apply jsoup-elements elems) .remove)
-              (into [] elems))
+  #?(:clj (try
+            (doto (apply jsoup-elements elems) .remove)
+            (into [] elems)
+            (catch IllegalArgumentException e
+              (throw (ex-info "Cannot detach a top-level element" {:got elems} e))))
      :cljs (into [] (map #(do (.remove %) %)) elems)))
 
 (defn detach-children!
@@ -280,23 +291,21 @@
    args: [elem]
    returns: seq of Element"
   ([^Element elem]
-   (-> elem
-       #?(:clj  .getAllElements
-          :cljs (query-all "*"))
-       clojure-vec))
+   (find-elems elem identity))
   ([^Element elem xform]
    (-> elem
        #?(:clj  .getAllElements
           :cljs (query-all "*"))
        (clojure-vec xform))))
 
+;; FIXME: These expose Attribute to the caller
 (defn find-attr
   "Finds attributes on the given element passing pred
    args: [elem pred]
      pred: function of attribute object -> truthy
    returns: vector of elem"
   [elem pred]
-  (attributes elem (filter pred)))
+  (-attributes elem (filter pred)))
 
 (defn find-where-attr
   "Finds deeply all elements where an attribute passes pred
@@ -338,9 +347,7 @@
      mode: one of :has := :not= :contains :contains-word :matches :starts :ends
    returns: seq of tags"
   ([^Element elem ^String tag]
-   (-> (#?(:clj .getElementsByTag :cljs .getElementsByTagName)
-        elem tag)
-       clojure-vec))
+   (find-by-tag elem tag identity))
   ([^Element elem ^String tag xform]
    (-> (#?(:clj .getElementsByTag :cljs .getElementsByTagName)
         elem tag)
@@ -351,10 +358,9 @@
    args: [elem class]
      class: string name of class
    returns: sequence of element"
-  ([^Element e ^String c]
-   (-> (#?(:clj .getElementsByClass :cljs .getElementsByClassName) e c)
-       clojure-vec))
-  ([^Element e ^String c xform]
-   (-> (#?(:clj .getElementsByClass :cljs .getElementsByClassName) e c)
+  ([^Element elem ^String c]
+   (find-by-class elem c identity))
+  ([^Element elem ^String c xform]
+   (-> (#?(:clj .getElementsByClass :cljs .getElementsByClassName)
+        elem c)
        (clojure-vec xform))))
-

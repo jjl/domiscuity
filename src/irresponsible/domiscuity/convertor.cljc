@@ -1,7 +1,8 @@
 (ns irresponsible.domiscuity.convertor
-  (:require [irresponsible.domiscuity.dom :as dom])
+  (:require [irresponsible.domiscuity.dom :as dom]
+            [irresponsible.domiscuity.util :as util])
   #?(:clj (:import [org.jsoup.nodes Attribute Comment DataNode
-                                   Document  Element TextNode])))
+                    Document  Element TextNode])))
 
 (def ^:dynamic *remove-empty-text*
   "Whether to remove text nodes that are 100% whitespace"
@@ -30,7 +31,7 @@
    args: [items]
    returns: vector"
   [base is]
-  (into base (keep native->clojure) (dom/clojure-seq is)))
+  (into base (keep native->clojure) (util/clojure-seq is)))
 
 (defmulti clojure->native
   "Turns a clojure map into a native dom element
@@ -77,7 +78,7 @@
  (defmethod native->clojure DataNode
    [^DataNode d]
    {:kind :text :text (.getWholeData d)}))
- 
+
 (defmethod native->clojure
   #?@(:clj  [Document [^Document d]]
       :cljs [js/Document [d]])
@@ -88,7 +89,7 @@
   #?@(:clj  [Element [^Element e]]
       :cljs [js/Element [e]])
    (let [tag-name (dom/tag-name e)
-         attrs    (native-into {} (dom/attributes e))
+         attrs    (native-into {} (dom/-attributes e))
          children (native-into [] (dom/children e))]
      {:kind :element :tag-name tag-name
       :attrs attrs   :children children}))

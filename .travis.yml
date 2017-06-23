@@ -1,0 +1,27 @@
+language: generic
+sudo: false
+script: ./boot travis
+
+before_cache:
+  - rm -rf $HOME/.boot/cache/tmp/
+cache:
+  directories:
+    - $HOME/.m2
+    - $HOME/.boot
+
+matrix:
+  include:
+    - env: JDK=zulu8
+    - env: JDK=zulu9
+  allow_failures:
+    - env: JDK=zulu9
+
+before_install:
+  - curl -fsSLo init.sh http://irresponsible.github.io/tools.travis.jdk-installer/init.sh
+  - source init.sh
+  - install_jdk "${JDK}"
+  - install_boot
+  - setup_boot_env
+  - java -version
+install:
+  - ./boot deps
