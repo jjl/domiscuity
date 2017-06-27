@@ -4,10 +4,9 @@ The irresponsible clojure guild presents...
 
 [![Build Status](https://travis-ci.org/kalouantonis/domiscuity.svg?branch=master)](https://travis-ci.org/kalouantonis/domiscuity)
 
-Parse html5 and play with the DOM with a clean API
+Parse html5 and play with the DOM with a clean API.
 
-Supports clojure, clojurescript support coming as soon as we
-figure out how to unit test it properly (bad phantomjs!)
+Supports clojure, clojurescript support is still experimental.
 
 ## Usage
 
