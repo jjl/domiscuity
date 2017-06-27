@@ -2,7 +2,7 @@ The irresponsible clojure guild presents...
 
 # domiscuity
 
-[![Build Status](https://travis-ci.org/kalouantonis/domiscuity.svg?branch=master)](https://travis-ci.org/kalouantonis/domiscuity)
+[![Build Status](https://travis-ci.org/irresponsible/domiscuity.svg?branch=master)](https://travis-ci.org/irresponsible/domiscuity)
 
 Parse html5 and play with the DOM with a clean API.
 

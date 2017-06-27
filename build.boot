@@ -21,10 +21,13 @@
        :url "https://github.com/irresponsible/domiscuity"
        :scm {:url "https://github.com/irresponsible/domiscuity"}
        :license {"MIT" "https://en.wikipedia.org/MIT_License"}}
-  test-cljs {:js-env :phantom}
+  push {:tag true
+        :ensure-branch "master"
+        :ensure-release true
+        :ensure-clean true
+        :gpg-sign true
+        :repo "clojars"}
   target  {:dir #{"target"}})
-
-(deftask deps [] identity)
 
 (deftask testing []
   (set-env! :source-paths   #(conj % "test")
@@ -32,16 +35,13 @@
   identity)
 
 (deftask clj-test []
-  (comp (testing) (speak) (t/test)))
+  (comp (testing) (t/test)))
 
 (deftask cljs-test []
-  (comp (testing) (speak) (test-cljs)))
+  (comp (testing) (test-cljs)))
 
 (deftask test []
-  (comp (testing) (speak) (t/test) (test-cljs)))
-
-(deftask travis []
-  (comp (testing) (t/test) (test-cljs)))
+  (comp (testing) (t/test)))
 
 (deftask autotest-clj []
   (comp (testing) (watch) (speak) (t/test)))
@@ -52,6 +52,6 @@
 (deftask autotest []
   (comp (watch) (test)))
 
-(deftask make-release-jar []
+(deftask release []
   (comp (pom) (jar)))
 
