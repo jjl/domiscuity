@@ -27,6 +27,12 @@ Supports clojure, clojurescript support is still experimental.
         scripts))
 ```
 
+## Contributors
+
+* [James Laver](https://github.com/jjl)
+* [Antonis Kalou](https://github.com/kalouantonis)
+* [Kent Frederic](https://github.com/kentfredric)
+
 ## Copyright and License
 
 Copyright (c) 2016 James Laver
