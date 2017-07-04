@@ -6,7 +6,7 @@
   :source-paths #{"src"}
   :dependencies '[[org.clojure/clojure    "1.9.0-alpha17" :scope "provided"]
                   [org.jsoup/jsoup "1.10.1"]
-                  [org.clojure/clojurescript   "1.9.293"        :scope "test"]
+                  [org.clojure/clojurescript   "1.9.671"        :scope "test"]
                   [adzerk/boot-test            "1.1.2"          :scope "test"]
                   [adzerk/boot-cljs            "1.7.228-2"      :scope "test"]
                   [crisptrutski/boot-cljs-test "0.2.2-SNAPSHOT" :scope "test"]])
