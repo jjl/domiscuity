@@ -42,6 +42,7 @@
   (comp (testing) (test-cljs)))
 
 (deftask test []
+  (println "* Warning: test-cljs disabled for now")
   (comp (testing) (t/test)))
 
 (deftask autotest-clj []
@@ -51,6 +52,7 @@
   (comp (testing) (watch) (speak) (test-cljs)))
 
 (deftask autotest []
+  (println "* Warning: test-cljs disabled for now")
   (comp (watch) (test)))
 
 (deftask release []
