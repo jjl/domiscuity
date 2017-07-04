@@ -54,5 +54,5 @@
   (comp (watch) (test)))
 
 (deftask release []
-  (comp (pom) (jar)))
+  (comp (pom) (jar) (push)))
 
