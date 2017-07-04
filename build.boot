@@ -1,3 +1,4 @@
+; vim: syntax=clojure
 (set-env!
   :project 'irresponsible/domiscuity
   :version "0.1.1-SNAPSHOT"
