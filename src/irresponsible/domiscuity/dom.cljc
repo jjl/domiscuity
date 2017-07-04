@@ -123,7 +123,7 @@
    returns: elem, mutated in place"
   ^Element [^Element e k v]
   #?(:clj (cond
-            (boolean? v) (.attr e (-make-attr-name k) ^boolean v)
+            (instance? Boolean v) (.attr e (-make-attr-name k) ^boolean v)
             (nil? v) e
             :else (.attr e (-make-attr-name k) ^String (str v)))
      :cljs (.setAttribute e k v)))
