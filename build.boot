@@ -2,7 +2,7 @@
 (set-env!
   :project 'irresponsible/domiscuity
   :version "0.1.1-SNAPSHOT"
-  :resource-paths #{"src"}
+  :resource-paths #{"src" "resources"}
   :source-paths #{"src"}
   :dependencies '[[org.clojure/clojure    "1.9.0-alpha17" :scope "provided"]
                   [org.jsoup/jsoup "1.10.3"]
