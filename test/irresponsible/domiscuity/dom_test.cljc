@@ -64,6 +64,20 @@
 (t/deftest test-tag-name
   (t/is (= :div (dom/tag-name (dom/make-element "div")))))
 
+(t/deftest test-text
+  (t/is (= "HODOR!" (dom/text (dom/make-text "HODOR!"))))
+  (t/is (thrown? Exception (dom/text (dom/make-comment "Winter is coming"))))
+  (t/is (thrown? Exception (dom/text (dom/make-element "video")))))
+
+(t/deftest test-set-text!
+  (let [e (dom/make-text "HODOR!")]
+    (dom/set-text! e "Hoorah!")
+    (t/is (= "Hoorah!" (dom/text e))))
+  (t/is (thrown? Exception
+                 (dom/set-text! (dom/make-comment "abcde") "edcba")))
+  (t/is (thrown? Exception
+                 (dom/set-text! (dom/make-element "video") "not-video"))))
+
 (t/deftest test-attributes
   (let [attr-map {:src "http://somesite.net/img.png"
                   :alt "A Lanister always pays his debts"}]

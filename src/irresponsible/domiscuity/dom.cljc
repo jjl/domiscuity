@@ -31,7 +31,7 @@
    args: [t]
    returns: bool"
   [t]
-  (instance? #?(:clj TextNode  :cljs js/TextNode) t))
+  (instance? #?(:clj TextNode  :cljs js/CharacterData) t))
 
 (defn comment?
   "true if c is a comment
@@ -91,6 +91,27 @@
    returns: keyword"
   [^Element e]
   (-> e #?(:clj .tagName :cljs .-nodeName) u/name-kw))
+
+(defn text
+  "Returns the text contained within a text node as a string.
+  args: [elem]
+  returns: string"
+  [^TextNode e]
+  (if (text? e)
+    (#?(:clj .text :cljs .data) e)
+    (throw (ex-info
+            "Can only retrieve text from a text node" {:got e}))))
+
+(defn set-text!
+  "Sets the text within a text node the given string.
+  args: [elem string]
+  returns: nil"
+  [^TextNode e ^String s]
+  (if (text? e)
+    #?(:clj  (.text e s)
+       :cljs (.replaceData e s))
+    (throw (ex-info
+            "Can not set text for a non-text object" {:got e}))))
 
 ;; TODO: pass transducer
 (defn attrs
