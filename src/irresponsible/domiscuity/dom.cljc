@@ -92,26 +92,48 @@
   [^Element e]
   (-> e #?(:clj .tagName :cljs .-nodeName) u/name-kw))
 
-(defn text
-  "Returns the text contained within a text node as a string.
-  args: [elem]
-  returns: string"
-  [^TextNode e]
-  (if (text? e)
-    (#?(:clj .text :cljs .data) e)
-    (throw (ex-info
-            "Can only retrieve text from a text node" {:got e}))))
+(defprotocol Text
+  (text [this]
+    "Returns the text contained within a text node as a string.
+    args: [elem]
+    returns: string")
+  (set-text! [this ^String s]
+    "Sets the text within a text node the given string.
+     args: [elem string]
+     returns: nil"))
 
-(defn set-text!
-  "Sets the text within a text node the given string.
-  args: [elem string]
-  returns: nil"
-  [^TextNode e ^String s]
-  (if (text? e)
-    #?(:clj  (.text e s)
-       :cljs (.replaceData e s))
-    (throw (ex-info
-            "Can not set text for a non-text object" {:got e}))))
+#?(:clj
+   (extend-protocol Text
+     TextNode
+     (text [t] (.text t))
+     (set-text! [t ^String s]
+       (.text t s))))
+
+#?(:clj
+   (extend-protocol Text
+     Element
+     (text [e]
+       (when (.hasText e)
+         (.text e)))
+     (set-text! [e ^String s]
+       (.text e s))))
+
+#?(:clj
+   (extend-protocol Text
+     Comment
+     (text [c] nil)
+     (set-text! [e s]
+       (throw (ex-info
+               "Cannot set text of a comment" {:got e})))))
+
+#?(:cljs
+   (extend-protocol Text
+     js/Element
+     (text [e] (.-innerHtml e))
+     (set-text! [e s]
+       (throw (ex-info
+               "Setting text is not supported in Clojurescript"
+               {:got e})))))
 
 ;; TODO: pass transducer
 (defn attrs

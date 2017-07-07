@@ -65,18 +65,53 @@
   (t/is (= :div (dom/tag-name (dom/make-element "div")))))
 
 (t/deftest test-text
-  (t/is (= "HODOR!" (dom/text (dom/make-text "HODOR!"))))
-  (t/is (thrown? Exception (dom/text (dom/make-comment "Winter is coming"))))
-  (t/is (thrown? Exception (dom/text (dom/make-element "video")))))
+  (t/testing "with text node"
+    (t/is (= "HODOR!" (dom/text (dom/make-text "HODOR!")))))
+
+  (t/testing "with element"
+    (t/testing "with text"
+      (t/is "HODOR!" (->> [(dom/make-text "HODOR!")]
+                          (dom/make-element "p" {}))))
+
+    (t/testing "without text"
+      (t/is (nil? (dom/text (dom/make-element "video"))))))
+
+  (t/testing "with comment"
+    (t/is (nil? (dom/text (dom/make-comment "Winter is coming"))))))
 
 (t/deftest test-set-text!
-  (let [e (dom/make-text "HODOR!")]
-    (dom/set-text! e "Hoorah!")
-    (t/is (= "Hoorah!" (dom/text e))))
-  (t/is (thrown? Exception
-                 (dom/set-text! (dom/make-comment "abcde") "edcba")))
-  (t/is (thrown? Exception
-                 (dom/set-text! (dom/make-element "video") "not-video"))))
+  #?(:clj
+     (t/testing "with text node"
+       (let [e (dom/make-text "HODOR!")]
+         (dom/set-text! e "Hoorah!")
+         (t/is (= "Hoorah!" (dom/text e))))))
+
+  #?(:clj
+     (t/testing "with element"
+       (t/testing "with original text"
+         (let [e (->> [(dom/make-text "authority")]
+                      (dom/make-element "p" {}))]
+           (dom/set-text! e "authoretah")
+           (t/is (= "authoretah" (dom/text e)))))
+
+       (t/testing "without original text"
+         (let [e (dom/make-element "video")]
+           (dom/set-text! e "respect mah authoretah")
+           (t/is (= "respect mah authoretah" (dom/text e)))))))
+
+  #?(:clj
+     (t/testing "with comment"
+       (t/is (thrown? Exception
+                      (dom/set-text! (dom/make-comment "abcde") "edcba")))))
+
+  #(:cljs
+    (t/testing "all setting is disabled"
+      (t/is (thrown? Exception
+                     (dom/set-text! (dom/make-text "abcde") "edcba")))
+      (t/is (thrown? Exception
+                     (dom/set-text! (dom/make-element "div") "edcba")))
+      (t/is (thrown? Exception
+                     (dom/set-text! (dom/make-comment "abcde") "edcba"))))))
 
 (t/deftest test-attributes
   (let [attr-map {:src "http://somesite.net/img.png"
