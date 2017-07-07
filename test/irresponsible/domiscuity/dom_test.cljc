@@ -214,9 +214,6 @@
     (let [elem (dom/make-element "div" {:a "1", :b "2"})]
       (t/is (empty? (dom/find-attr elem (constantly false)))))))
 
-;; TODO: Missing functionality
-;; 1. no way to get text out of an element
-
 (def test-html
   "<!doctype html>
    <html>
