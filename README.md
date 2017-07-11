@@ -31,7 +31,7 @@ Supports clojure, clojurescript support is still experimental.
 
 * [James Laver](https://github.com/jjl)
 * [Antonis Kalou](https://github.com/kalouantonis)
-* [Kent Frederic](https://github.com/kentfredric)
+* [Kent Fredric](https://github.com/kentfredric)
 
 ## Copyright and License
 
