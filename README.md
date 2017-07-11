@@ -14,19 +14,64 @@ Supports clojure, clojurescript support is still experimental.
 
 ```clojure
 (ns my.app
- (:require [domiscuity.parser :as p]
-           [domiscuity.nav :as nav]
-		   [domiscuity.convertor :as c]))
+ (:require [irresponsible.domiscuity.parser :as parser]
+           [irresponsible.domiscuity.dom :as dom]))
 
-;; parsing a string of html is easy 
-(def doc (p/doc (slurp "my-file.html")))
-;; so is finding elements within it
-(def scripts (nav/find-tags "script"))
-;; converting to clojure and filtering is easy too
-(def javascripts
-  (into [] (comp (keep c/native->clojure)
-                 (filter #(= "text/javascript" (:type (:attrs %)))))
-        scripts))
+;; Parse HTML file
+(def doc (parser/doc (slurp "my-file.html")))
+
+;; Fetch all elements with class "small"
+(dom/find-by-class doc :small)
+
+;; Fetch all elements with attribute "value"
+(dom/find-by-attr doc :value)
+;; Fetch all elements with attribute "value" of 5
+(dom/find-by-attr doc :value 5)
+
+;; Get a single element with ID main-container
+(def elem (dom/find-by-id doc :main-container))
+
+;; Get all attributes
+(dom/attrs elem)
+;; Set attribute value
+(dom/set-attr! elem :class "top-level")
+;; Get the new attribute
+(println (dom/attr elem :class)) => "top-level"
+
+;; Get all children of the given element
+;; (includes text and comments)
+(dom/children elem)
+
+;; Get all ONLY element children
+(dom/child-elems elem)
+
+;; Add a child element
+(dom/append! elem (dom/make-element "div" {:class "row"}))
+
+;; Detach children from parents
+(dom/detach! elem)
+
+;; Add a sibling element to the current one
+(dom/insert-after! elem (dom/make-element "div" {:id "footer"}))
+;; Check that the sibling is correct
+(println (dom/attr (dom/next-sibling elem) "id")) => "footer"
+
+;; Transucer for finding javascript elements
+(def xform (filter #(= "text/javascript" (dom/attr % "type"))))
+;; Find all javascript script tags
+(def javascripts (dom/find-by-tag "script" xform))
+
+;; Perform advanced queries
+(dom/query-all doc "p.small#introduction")
+;; Filter with custom predicate
+(dom/find-attr doc #(and (= (dom/attr % :class) "small")
+                         (= (dom/attr % :id) "introduction")))
+                         
+;; Reading and writing text
+(def doc (parser/doc "<p>My text block</p>"))
+(println (dom/text doc)) => "My text block"
+(dom/set-text! doc "Another text block")
+(println (dom/text doc)) => "Another text block"
 ```
 
 ## Contributors
