@@ -8,7 +8,7 @@
 
 (set-env!
   :project 'irresponsible/domiscuity
-  :version "0.1.0"
+  :version "0.2.0"
   :resource-paths #{"src" "resources"}
   :source-paths #{"src"}
   :dependencies #(into % '[[org.jsoup/jsoup "1.10.3"]

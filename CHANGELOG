@@ -1,2 +1,6 @@
+0.2.0 - 2017-07-11
+- New "Text" protocol
+- New functions for setting and receiving text data
+
 0.1.0 - 2017-07-04 965634ce72aaa9d71590ba3e71f97214f0d86cb0
 - Initial version
